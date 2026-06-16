@@ -10,7 +10,6 @@ const THAI_MONTHS = [
 ];
 const ENG_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-// ชื่อ Sheet = "Chiller_Jun2026"  — เปลี่ยนอัตโนมัติเมื่อวันที่เปลี่ยนเดือน
 function sheetName(base: string, dateStr: string) {
   const d = new Date(dateStr);
   return `${base}_${ENG_MONTHS[d.getMonth()]}${d.getFullYear()}`;
@@ -57,7 +56,7 @@ const S = {
   navBar:{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)",
            width:"100%", maxWidth:480, background:C.surface,
            borderTop:`1px solid ${C.border}`, display:"flex", zIndex:200 },
-  navBtn:(a)=>({ flex:1, padding:"10px 4px 6px", background:"none", border:"none",
+  navBtn:(a: boolean)=>({ flex:1, padding:"10px 4px 6px", background:"none", border:"none",
                  color: a ? C.accentLight : C.muted, fontSize:9, fontWeight: a ? 700 : 500,
                  cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center",
                  gap:4, borderTop: a ? `2px solid ${C.accent}` : "2px solid transparent",
@@ -68,7 +67,7 @@ const S = {
             padding:"10px 14px", fontSize:12, fontWeight:700, letterSpacing:"0.05em",
             color:"#BFDBFE", display:"flex", alignItems:"center", gap:8 },
   shiftTabs:{ display:"flex", borderBottom:`1px solid ${C.border}` },
-  shiftTab:(a)=>({ flex:1, padding:"8px 4px", background: a ? C.accent : "transparent",
+  shiftTab:(a: boolean)=>({ flex:1, padding:"8px 4px", background: a ? C.accent : "transparent",
                    border:"none", color: a ? "#fff" : C.muted,
                    fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.15s" }),
   fRow:{ display:"flex", alignItems:"center", padding:"8px 14px",
@@ -79,7 +78,7 @@ const S = {
            borderRadius:8, padding:"7px 10px", color:C.text,
            fontSize:13, fontWeight:600, textAlign:"right", outline:"none", boxSizing:"border-box" },
   fUnit:{ fontSize:11, color:C.muted, width:34 },
-  chip:(a)=>({ padding:"6px 14px", borderRadius:20,
+  chip:(a: boolean)=>({ padding:"6px 14px", borderRadius:20,
                border:`1px solid ${a ? C.accent : C.border}`,
                background: a ? C.accent : "transparent",
                color: a ? "#fff" : C.muted, fontSize:13, fontWeight:600, cursor:"pointer" }),
@@ -89,22 +88,22 @@ const S = {
               fontWeight:700, cursor:"pointer", width:"calc(100% - 24px)",
               display:"flex", alignItems:"center", justifyContent:"center", gap:8,
               boxShadow:"0 4px 14px rgba(37,99,235,0.4)" },
-  toast:(t)=>({ position:"fixed", top:76, left:"50%", transform:"translateX(-50%)",
+  toast:(t: string)=>({ position:"fixed", top:76, left:"50%", transform:"translateX(-50%)",
                 background: t==="success" ? "#166534" : "#7F1D1D",
                 color:"#fff", padding:"12px 20px", borderRadius:10, fontSize:13,
                 fontWeight:600, zIndex:999, boxShadow:"0 4px 20px rgba(0,0,0,0.4)",
                 maxWidth:300, textAlign:"center" }),
-  toggleBtn:(a,col)=>({ padding:"5px 10px", borderRadius:6,
+  toggleBtn:(a: boolean, col: string)=>({ padding:"5px 10px", borderRadius:6,
                          border:`1px solid ${a ? col : C.border}`,
                          background: a ? col+"22" : "transparent",
                          color: a ? col : C.muted, fontSize:11, fontWeight:600, cursor:"pointer" }),
 };
 
 // ─── UTILITY HOOKS ───────────────────────────────────────────────────────────
-function useFormState(initial) {
+function useFormState(initial: any) {
   const [state, setState] = useState(initial);
-  const set = (path, value) => {
-    setState(prev => {
+  const set = (path: string, value: any) => {
+    setState((prev: any) => {
       const next = JSON.parse(JSON.stringify(prev));
       const keys = path.split(".");
       let cur = next;
@@ -113,20 +112,21 @@ function useFormState(initial) {
       return next;
     });
   };
-  return [state, set, setState];
+  // ✅ เติม as const เพื่อให้ TypeScript รู้ว่าเป็น Tuple และไม่เกิด Error ตอนเรียกใช้ฟังก์ชัน
+  return [state, set, setState] as const;
 }
 
 function useToast() {
-  const [toast, setToast] = useState(null);
-  const show = (type, msg) => {
+  const [toast, setToast] = useState<{type: string, msg: string} | null>(null);
+  const show = (type: string, msg: string) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3500);
   };
-  return [toast, show];
+  return [toast, show] as const;
 }
 
 // ─── SEND TO SHEETS ───────────────────────────────────────────────────────────
-async function sendToSheets(payload) {
+async function sendToSheets(payload: any) {
   await fetch(APPS_SCRIPT_URL, {
     method:"POST", mode:"no-cors",
     headers:{ "Content-Type":"application/json" },
@@ -135,8 +135,8 @@ async function sendToSheets(payload) {
 }
 
 // ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
-function ShiftTabs({ shift, setShift }) {
-  const icons = { "09:30":"🌅", "21:30":"🌆", "05:30":"🌙" };
+function ShiftTabs({ shift, setShift }: any) {
+  const icons: any = { "09:30":"🌅", "21:30":"🌆", "05:30":"🌙" };
   return (
     <div style={S.shiftTabs}>
       {SHIFTS.map(s => (
@@ -148,7 +148,7 @@ function ShiftTabs({ shift, setShift }) {
   );
 }
 
-function NumInput({ value, onChange, wide, placeholder="—" }) {
+function NumInput({ value, onChange, wide, placeholder="—" }: any) {
   return (
     <input type="number" inputMode="decimal"
       style={{ ...S.fInput, width: wide ? 110 : 90 }}
@@ -157,7 +157,7 @@ function NumInput({ value, onChange, wide, placeholder="—" }) {
   );
 }
 
-function FieldRow({ label, range, unit, value, onChange, wide }) {
+function FieldRow({ label, range, unit, value, onChange, wide }: any) {
   return (
     <div style={S.fRow}>
       <div style={S.fLabel}>
@@ -170,7 +170,7 @@ function FieldRow({ label, range, unit, value, onChange, wide }) {
   );
 }
 
-function SubmitBtn({ onClick, sending }) {
+function SubmitBtn({ onClick, sending }: any) {
   return (
     <button style={S.submitBtn} onClick={onClick} disabled={sending}>
       {sending ? "⏳ กำลังส่ง..." : "📤 บันทึกข้อมูล"}
@@ -188,9 +188,9 @@ const initChillerRow = () => ({
   elecPower:"", kwMeter:"", pchp:"", cdp:"", cop:"",
 });
 
-function ChillerPage({ date }) {
+function ChillerPage({ date }: any) {
   const initData = () => {
-    const d = {};
+    const d: any = {};
     CHILLERS.forEach(ch => { d[ch] = {}; SHIFTS.forEach(s => { d[ch][s] = initChillerRow(); }); });
     return d;
   };
@@ -201,9 +201,9 @@ function ChillerPage({ date }) {
   const [toast, showToast] = useToast();
 
   const row = data[chiller][shift];
-  const F = (field) => ({
+  const F = (field: string) => ({
     value: row[field],
-    onChange: val => setField(`${chiller}.${shift}.${field}`, val),
+    onChange: (val: string) => setField(`${chiller}.${shift}.${field}`, val),
   });
 
   const handleSubmit = async () => {
@@ -285,9 +285,9 @@ const PUMP_EQUIP = [
   { key:"chilledSCHP",   label:"Chilled Pump (SCHP)" },
 ];
 
-function PumpPage({ date }) {
+function PumpPage({ date }: any) {
   const initPumps = () => {
-    const d = {};
+    const d: any = {};
     PUMP_EQUIP.forEach(({ key }) => {
       d[key] = {};
       SHIFTS.forEach(s => { d[key][s] = { in1:"",in2:"",in3:"",out1:"",out2:"",out3:"" }; });
@@ -296,9 +296,9 @@ function PumpPage({ date }) {
   };
   const initData = () => ({
     pumps: initPumps(),
-    freezer:  { "09:30":{f1:"",f2:""}, "21:30":{f1:"",f2:""}, "05:30":{f1:"",f2:""} },
-    wine:     { "09:30":{w1:"",w2:""}, "21:30":{w1:"",w2:""}, "05:30":{w1:"",w2:""} },
-    heatWater:{ "09:30":"", "21:30":"", "05:30":"" },
+    freezer:  { "09:30":{f1:"",f2:""}, "21:30":{f1:"",f2:""}, "05:30":{f1:"",f2:""} } as any,
+    wine:     { "09:30":{w1:"",w2:""}, "21:30":{w1:"",w2:""}, "05:30":{w1:"",w2:""} } as any,
+    heatWater:{ "09:30":"", "21:30":"", "05:30":"" } as any,
     conductivity:"", caChemical:"", acChemical:"", waterSoftener:"",
     gasInlet:"", gasOutlet:"",
     mainMeter:"", coolingMeter:"", bleedOff:"", swimPool:"",
@@ -319,7 +319,7 @@ function PumpPage({ date }) {
     setSending(false);
   };
 
-  const PressureBlock = ({ equipKey, label }) => (
+  const PressureBlock = ({ equipKey, label }: any) => (
     <div style={{ borderBottom:`1px solid ${C.border}` }}>
       <div style={{ padding:"8px 14px 4px", fontSize:11, color:C.accentLight, fontWeight:700 }}>{label}</div>
       <div style={{ display:"flex", gap:6, padding:"4px 14px 10px", flexWrap:"wrap" }}>
@@ -339,14 +339,14 @@ function PumpPage({ date }) {
     </div>
   );
 
-  const SimpleField = ({ path, label, unit }) => {
+  const SimpleField = ({ path, label, unit }: any) => {
     const keys = path.split(".");
-    let val = data;
+    let val: any = data;
     keys.forEach(k => { val = val?.[k]; });
     return (
       <div style={S.fRow}>
         <div style={S.fLabel}>{label}</div>
-        <NumInput value={val || ""} onChange={v => setField(path, v)} />
+        <NumInput value={val || ""} onChange={(v: string) => setField(path, v)} />
         {unit && <span style={S.fUnit}>{unit}</span>}
       </div>
     );
@@ -368,12 +368,12 @@ function PumpPage({ date }) {
         <div style={S.secHead}>🧊 Freezer Temperature</div>
         <div style={S.fRow}>
           <div style={S.fLabel}>No.01 (-18 to -22°C)</div>
-          <NumInput value={data.freezer[shift].f1} onChange={v => setField(`freezer.${shift}.f1`,v)} />
+          <NumInput value={data.freezer[shift].f1} onChange={(v: string) => setField(`freezer.${shift}.f1`,v)} />
           <span style={S.fUnit}>°C</span>
         </div>
         <div style={S.fRow}>
           <div style={S.fLabel}>No.02 (2 to 5°C)</div>
-          <NumInput value={data.freezer[shift].f2} onChange={v => setField(`freezer.${shift}.f2`,v)} />
+          <NumInput value={data.freezer[shift].f2} onChange={(v: string) => setField(`freezer.${shift}.f2`,v)} />
           <span style={S.fUnit}>°C</span>
         </div>
       </div>
@@ -382,12 +382,12 @@ function PumpPage({ date }) {
         <div style={S.secHead}>🍷 Wine Cabinet</div>
         <div style={S.fRow}>
           <div style={S.fLabel}>No.01 (9 to 10°C)</div>
-          <NumInput value={data.wine[shift].w1} onChange={v => setField(`wine.${shift}.w1`,v)} />
+          <NumInput value={data.wine[shift].w1} onChange={(v: string) => setField(`wine.${shift}.w1`,v)} />
           <span style={S.fUnit}>°C</span>
         </div>
         <div style={S.fRow}>
           <div style={S.fLabel}>No.02 (18 to 20°C)</div>
-          <NumInput value={data.wine[shift].w2} onChange={v => setField(`wine.${shift}.w2`,v)} />
+          <NumInput value={data.wine[shift].w2} onChange={(v: string) => setField(`wine.${shift}.w2`,v)} />
           <span style={S.fUnit}>°C</span>
         </div>
       </div>
@@ -396,7 +396,7 @@ function PumpPage({ date }) {
         <div style={S.secHead}>♨️ Heat Water</div>
         <div style={S.fRow}>
           <div style={S.fLabel}>อุณหภูมิน้ำร้อน</div>
-          <NumInput value={data.heatWater[shift]} onChange={v => setField(`heatWater.${shift}`,v)} />
+          <NumInput value={data.heatWater[shift]} onChange={(v: string) => setField(`heatWater.${shift}`,v)} />
           <span style={S.fUnit}>°C</span>
         </div>
       </div>
@@ -433,19 +433,19 @@ function PumpPage({ date }) {
 
 // ─── PAGE 3: MDB ─────────────────────────────────────────────────────────────
 const BOARDS = ["MDB1","MDB2","EMDB"];
-const CODE_UNITS = {
+const CODE_UNITS: any = {
   "1":"Pate","2":"t","10":"mwh","11":"mwh","12":"mwh",
   "20":"mwh","21":"mwh","22":"mwh","31":"mw","32":"mw",
   "41":"kw","42":"kw","60":"mw mvn","61":"mw mvn",
   "71":"mwa","72":"mwa","81":"mvar","82":"mvar",
 };
 
-function MDBPage({ date }) {
+function MDBPage({ date }: any) {
   const initRow = () => ({ r:"",s:"",t:"",ampR:"",ampS:"",ampT:"", ats:"Auto", kwh:"" });
   const initData = () => {
-    const d = {};
+    const d: any = {};
     BOARDS.forEach(b => { d[b] = {}; SHIFTS.forEach(s => { d[b][s] = initRow(); }); });
-    const codes = {};
+    const codes: any = {};
     Object.keys(CODE_UNITS).forEach(c => { codes[c] = ""; });
     return { boards:d, codes, remark:"" };
   };
@@ -488,7 +488,7 @@ function MDBPage({ date }) {
           <div key={field} style={S.fRow}>
             <div style={S.fLabel}>{label}</div>
             <NumInput value={row[field]}
-              onChange={v => setField(`boards.${board}.${shift}.${field}`, v)} />
+              onChange={(v: string) => setField(`boards.${board}.${shift}.${field}`, v)} />
             <span style={S.fUnit}>{unit}</span>
           </div>
         ))}
@@ -502,18 +502,18 @@ function MDBPage({ date }) {
         </div>
         <div style={S.fRow}>
           <div style={S.fLabel}>kWh Meter</div>
-          <NumInput value={row.kwh} onChange={v => setField(`boards.${board}.${shift}.kwh`, v)} />
+          <NumInput value={row.kwh} onChange={(v: string) => setField(`boards.${board}.${shift}.kwh`, v)} />
           <span style={S.fUnit}>kWh</span>
         </div>
       </div>
 
       <div style={S.section}>
         <div style={S.secHead}>🔢 Electricity Main Meter Codes</div>
-        {Object.entries(CODE_UNITS).map(([code, unit]) => (
+        {Object.entries(CODE_UNITS).map(([code, unit]: any) => (
           <div key={code} style={S.fRow}>
             <div style={S.fLabel}>Code {code}</div>
-            <NumInput value={data.codes[code]}
-              onChange={v => setField(`codes.${code}`, v)} />
+            <NumInput value={(data.codes as any)[code]}
+              onChange={(v: string) => setField(`codes.${code}`, v)} />
             <span style={S.fUnit}>{unit}</span>
           </div>
         ))}
@@ -557,9 +557,9 @@ const PUMP_ROOM_LIST = [
   { key:"hwrp2",    label:"B2/HWRP No.02" },
 ];
 
-function PumpRoomPage({ date }) {
+function PumpRoomPage({ date }: any) {
   const initData = () => {
-    const d = {};
+    const d: any = {};
     SHIFTS.forEach(s => {
       d[s] = {};
       PUMP_ROOM_LIST.forEach(({ key }) => { d[s][key] = { status:"Auto", inletPsi:"" }; });
@@ -591,7 +591,7 @@ function PumpRoomPage({ date }) {
       </div>
 
       <div style={S.section}>
-        <div style={S.secHead}>🔧 สถานะปั๊มและแรงดัน</div>
+        <div style={S.secHead}>🔧 Status & Pressure</div>
         {PUMP_ROOM_LIST.map(({ key, label }) => {
           const row = data[shift][key];
           return (
@@ -609,7 +609,7 @@ function PumpRoomPage({ date }) {
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <div style={{ fontSize:11, color:C.muted, flex:1 }}>Inlet Pressure</div>
                 <NumInput value={row.inletPsi}
-                  onChange={v => setField(`${shift}.${key}.inletPsi`, v)} />
+                  onChange={(v: string) => setField(`${shift}.${key}.inletPsi`, v)} />
                 <span style={S.fUnit}>Psi</span>
               </div>
             </div>
@@ -622,174 +622,11 @@ function PumpRoomPage({ date }) {
   );
 }
 
-// ─── SETUP PAGE ───────────────────────────────────────────────────────────────
-const APPS_SCRIPT_CODE = `// ═══════════════════════════════════════════════
-// AMARA Bangkok — Engineering Log Sheet Handler
-// วาง code นี้ใน Google Apps Script แล้ว Deploy
-// ═══════════════════════════════════════════════
-
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var ss   = SpreadsheetApp.getActiveSpreadsheet();
-
-    // ── ชื่อ Sheet มาจาก app เช่น "Chiller_Jun2026"
-    var sheetName = data.sheet;
-    var sheet = ss.getSheetByName(sheetName);
-
-    // ── สร้าง Sheet ใหม่อัตโนมัติถ้ายังไม่มี
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
-      // จัดสีหัว sheet ตามประเภท
-      var color = sheetName.startsWith("Chiller") ? "#1E40AF"
-                : sheetName.startsWith("Pump")    ? "#166534"
-                : sheetName.startsWith("MDB")     ? "#7C2D12"
-                : "#1E293B";
-      sheet.setTabColor(color);
-    }
-
-    // ── สร้าง Header Row อัตโนมัติถ้ายังว่าง
-    if (sheet.getLastRow() === 0) {
-      var headers = Object.keys(data);
-      var headerRange = sheet.getRange(1, 1, 1, headers.length);
-      headerRange.setValues([headers]);
-      headerRange.setBackground("#1E293B");
-      headerRange.setFontColor("#FFFFFF");
-      headerRange.setFontWeight("bold");
-      sheet.setFrozenRows(1);
-    }
-
-    // ── บันทึกข้อมูลแถวใหม่
-    var keys = sheet.getRange(1, 1, 1, sheet.getLastColumn())
-                    .getValues()[0];
-    var row  = keys.map(function(k) { return data[k] !== undefined ? data[k] : ""; });
-    sheet.appendRow(row);
-
-    // ── Alternate row color เพื่อความอ่านง่าย
-    var lastRow = sheet.getLastRow();
-    if (lastRow % 2 === 0) {
-      sheet.getRange(lastRow, 1, 1, sheet.getLastColumn())
-           .setBackground("#F8FAFC");
-    }
-
-    return ContentService
-      .createTextOutput(JSON.stringify({ status:"ok", sheet:sheetName, row:lastRow }))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ status:"error", message:err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// ── ทดสอบได้ด้วย doGet
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status:"ready", version:"1.0" }))
-    .setMimeType(ContentService.MimeType.JSON);
-}`;
-
-function SetupPage({ date }) {
-  const [copied, setCopied] = useState(false);
-
-  const copy = () => {
-    navigator.clipboard?.writeText(APPS_SCRIPT_CODE).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    });
-  };
-
-  const steps = [
-    "เปิด Google Sheets → สร้าง Spreadsheet ใหม่",
-    "ไปที่ Extensions → Apps Script",
-    "ลบโค้ดเดิมทั้งหมด แล้ววางโค้ดด้านล่าง",
-    "กด Save (Ctrl+S) แล้วกด Deploy → New deployment",
-    "ตั้งค่า: Execute as = Me,  Who has access = Anyone",
-    "กด Authorize แล้ว Deploy → คัดลอก Web App URL",
-    "แก้ไข APPS_SCRIPT_URL ในโค้ดแอปนี้บรรทัดแรก",
-  ];
-
-  return (
-    <div>
-      <div style={S.section}>
-        <div style={S.secHead}>📂 ระบบ Sheet รายเดือนอัตโนมัติ</div>
-        <div style={{ padding:"14px 16px", background:"rgba(59,130,246,0.08)" }}>
-          <div style={{ fontSize:13, color:C.accentLight, fontWeight:700, marginBottom:10 }}>
-            Sheet ปัจจุบัน ({thaiMonthLabel(date)}):
-          </div>
-          {["Chiller","PumpCooling","MDB","PumpRoom"].map(base => {
-            const name = sheetName(base, date);
-            return (
-              <div key={base} style={{ display:"flex", alignItems:"center", gap:8,
-                                       padding:"6px 0", borderBottom:`1px solid ${C.border}` }}>
-                <span style={{ fontSize:11, color:C.muted, width:100 }}>{base}</span>
-                <span style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:"monospace" }}>
-                  → {name}
-                </span>
-              </div>
-            );
-          })}
-          <div style={{ marginTop:12, fontSize:11, color:C.muted, lineHeight:1.8 }}>
-            🔄 เมื่อวันที่เปลี่ยนเดือน แอปจะสร้าง Sheet ใหม่อัตโนมัติ
-            โดยไม่ลบข้อมูลเดิม — ทุกเดือนมี Sheet ของตัวเอง
-          </div>
-        </div>
-      </div>
-
-      <div style={S.section}>
-        <div style={S.secHead}>⚙️ วิธีตั้งค่า (ทำครั้งเดียว)</div>
-        <div style={{ padding:"14px 16px" }}>
-          {steps.map((step, i) => (
-            <div key={i} style={{ display:"flex", gap:10, marginBottom:10, alignItems:"flex-start" }}>
-              <div style={{ minWidth:22, height:22, borderRadius:"50%",
-                            background:C.accent, display:"flex", alignItems:"center",
-                            justifyContent:"center", fontSize:11, fontWeight:700, color:"#fff" }}>
-                {i+1}
-              </div>
-              <div style={{ fontSize:13, color:C.muted, lineHeight:1.5, paddingTop:2 }}>{step}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={S.section}>
-        <div style={{ ...S.secHead, justifyContent:"space-between" }}>
-          <span>📋 Apps Script Code</span>
-          <button onClick={copy}
-            style={{ padding:"4px 12px", borderRadius:6, border:"none",
-                     background: copied ? C.green : C.accent,
-                     color:"#fff", fontSize:11, fontWeight:700, cursor:"pointer" }}>
-            {copied ? "✅ คัดลอกแล้ว" : "📋 คัดลอก"}
-          </button>
-        </div>
-        <div style={{ padding:14, background:"#050D1A", fontSize:10, fontFamily:"monospace",
-                      color:"#86EFAC", lineHeight:1.7, whiteSpace:"pre-wrap", wordBreak:"break-all",
-                      maxHeight:320, overflowY:"auto" }}>
-          {APPS_SCRIPT_CODE}
-        </div>
-      </div>
-
-      <div style={S.section}>
-        <div style={S.secHead}>📌 หมายเหตุ</div>
-        <div style={{ padding:14, fontSize:12, color:C.muted, lineHeight:2 }}>
-          <div>• Sheet สีน้ำเงิน = Chiller | สีเขียว = Pump | สีแดง = MDB</div>
-          <div>• ข้อมูลเก่าไม่ถูกลบ — ทุกเดือนสร้าง Sheet ใหม่</div>
-          <div>• Header แถวแรกถูก Freeze ไว้อัตโนมัติ</div>
-          <div>• Verified by: <span style={{color:C.accentLight}}>Anon Lalee</span></div>
-          <div>• Acknowledged by: <span style={{color:C.accentLight}}>Sophon Khongkaew</span></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage]  = useState("chiller");
   const [date, setDate]  = useState(today());
 
-  // อัปเดตวันที่อัตโนมัติเมื่อเปิดแอปข้ามเที่ยงคืน
   useEffect(() => {
     const timer = setInterval(() => {
       const now = today();
@@ -805,14 +642,14 @@ export default function App() {
     { key:"pumproom", icon:"🔧", label:"Pump Room" },
   ];
 
-  const TITLES = {
+  const TITLES: any = {
     chiller:"Chiller Daily Log", pump:"Pump & Cooling Tower",
     mdb:"Main Distribution Boards", pumproom:"Pump Room Operation",
   };
 
   return (
     <div style={S.app}>
-      {/* ── Header ── */}
+      {/* Header */}
       <div style={S.header}>
         <div style={S.logo}>A M A R A  B A N G K O K</div>
         <div style={S.pageTitle}>{TITLES[page]}</div>
@@ -829,7 +666,7 @@ export default function App() {
           </span>
         </div>
 
-        {/* Month indicator — เปลี่ยนอัตโนมัติ */}
+        {/* Month indicator */}
         <div style={{ marginTop:6, display:"flex", alignItems:"center", gap:6, fontSize:11 }}>
           <span>📂</span>
           <span style={{ color:"#93C5FD" }}>Sheet: </span>
@@ -842,13 +679,13 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Pages ── */}
+      {/* Pages */}
       {page === "chiller"  && <ChillerPage  date={date} />}
       {page === "pump"     && <PumpPage     date={date} />}
       {page === "mdb"      && <MDBPage      date={date} />}
       {page === "pumproom" && <PumpRoomPage date={date} />}
 
-      {/* ── Bottom Nav ── */}
+      {/* Bottom Nav */}
       <nav style={S.navBar}>
         {NAV.map(({ key, icon, label }) => (
           <button key={key} style={S.navBtn(page===key)} onClick={() => setPage(key)}>
